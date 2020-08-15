@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { map, tap } from 'rxjs/operators';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { map, tap, take, exhaustMap } from 'rxjs/operators';
 
 import { RecipeService } from '../recipes/recipe.service';
 import { Recipe } from '../recipes/recipe.model';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,8 @@ export class DataStorageService {
 
   constructor(
     private http: HttpClient,
-    private recipeService: RecipeService) { }
+    private recipeService: RecipeService,
+    private authService: AuthService) { }
 
   storeRecipes() {
     const recipes = this.recipeService.getRecipes();
@@ -32,11 +34,25 @@ export class DataStorageService {
   }
 
   fetchRecipes() {
-    // o 1o map é do rxjs
-    // o 2o é um método do array
-    return this.http
-        .get<Recipe[]>(this.url)
-        .pipe(map(recipes => {
+
+    // exhaustMap => aguarda o primeiro Observable (user) ser completado
+    // então ele passa o retorno para o novo Observable (http.get)
+
+    return this.authService.user.pipe(
+      take(1),
+      exhaustMap(user => {
+        return this.http
+          .get<Recipe[]>(
+            this.url
+            // ,
+            // {
+            //   params: new HttpParams().set('auth', user.token)
+            // }
+          );
+      }),
+      // o 1o map é do rxjs
+      // o 2o é um método do array
+      map(recipes => {
           return recipes.map( recipe => {
             return {
               ...recipe,
@@ -48,8 +64,5 @@ export class DataStorageService {
             this.recipeService.setRecipes(recipes);
           })
         );
-        // .subscribe(recipes => {
-        //   this.recipeService.setRecipes(recipes);
-        // });
   }
 }
