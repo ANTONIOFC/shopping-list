@@ -26,6 +26,10 @@ export class AuthComponent implements OnInit {
     this.isLogingMode = !this.isLogingMode;
   }
 
+  onHandleError() {
+    this.error = null;
+  }
+
   onSubmit(form: NgForm) {
 
     if (!form.valid) {

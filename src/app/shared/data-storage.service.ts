@@ -5,12 +5,15 @@ import { map, tap, take, exhaustMap } from 'rxjs/operators';
 import { RecipeService } from '../recipes/recipe.service';
 import { Recipe } from '../recipes/recipe.model';
 import { AuthService } from '../auth/auth.service';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DataStorageService {
   url = 'https://ng-course-recipe-book-28438.firebaseio.com/recipes.json';
+
+  recipesSored = new BehaviorSubject<boolean>(null);
 
   constructor(
     private http: HttpClient,
@@ -30,6 +33,7 @@ export class DataStorageService {
       )
       .subscribe(response => {
         console.log(response);
+        this.recipesSored.next(true);
       });
   }
 
